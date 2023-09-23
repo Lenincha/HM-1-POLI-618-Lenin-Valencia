@@ -1,2 +1,2 @@
-# Assignment
-Individual Assignment for POLI 618
+# HM 1 
+First Individual Assignment for POLI 618
