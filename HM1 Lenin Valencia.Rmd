@@ -1,0 +1,169 @@
+---
+title: "HM1"
+author: "Lenin Valencia"
+date: "2023-09-21"
+output: html_document
+---
+
+## Task
+
+1. Tidying up and reporting central tendencies
+Using tidy and replicable principles, without making any manual changes or changing the file type convert the Country Ratings and Status, 1973-2016 (FINAL)_0.xlsx (Freedom House) data into country-year data. I downloaded this data for you, but this is how the data actually looks!
+
+2. How many variables does the dataset contain? How many observations are there?
+Compute measures of central tendency and variability. Plot the distribution of both the PR and CL variable using a boxplot and histogram. Then try to make the same plot by year. Make sure to make your plots as professional as possible. Include a title and label the axes.
+
+## Instruction
+
+1. Submit all the files related to the assignment. These might include:
+- Your Rmarkdown file
+- Your markdown file (using output: github_document in Rmarkdown to get a homework readable on github)
+- the data
+- the RHistory and/or RProject
+- the folder created when knitting the document
+2. Include all your code (and the output) in the md file. Do not delete error messages and warnings.
+-Comment your code. Explain what you are trying to do. E.g. ``I’m using this function to…’’
+-Make methodological decisions when necessary and rigorously defend these decisions.
+-Use headers to structure your assignments. Be clear about what questions you are answering.
+-Make your code tidy and replicable. Use defensive coding.
+-Avoid printing hundreds of lines of output in your md file. Use functions like head, limit the number of lines or subset your data.
+-Include a small amount of discussion for each question (i.e. interpret the graphs, the results). Make sure that you answer the question -(do not simply print numbers or graphs).
+-Other than in exceptional circumstances, there is no late submission. You need to submit what you have when the assignment is due.
+
+
+
+
+```{r libraries, echo=FALSE}
+library(tidyr)
+library("readxl")
+```
+
+
+```{r, echo=FALSE}
+# I imported XLX file to R
+data <- read_excel("/Users/leninvalencia/Country Ratings and Status, 1973-2016 (FINAL)_0.xlsx",range = cell_rows(6:213))
+data1 <- read_excel("/Users/leninvalencia/Country Ratings and Status, 1973-2016 (FINAL)_0.xlsx",range = cell_rows(7:213))
+```
+
+
+```{r pressure 2, echo=FALSE}
+# Started Data cleaning, eliminating rows. 
+
+years = names(data)[1:43*3]
+print(years)
+
+print(names(data1))
+## I'll extract only 1 variable (PR, CL, Status) for pivoting
+###Extracting PR
+dataPR<-data1[ , grepl( "PR" , names( data1 ) ) ]
+print(names(dataPR))
+dataPR["country"] = data1["...1"]
+
+###Extracting CL
+dataCL<-data1[ , grepl( "CL" , names( data1 ) ) ]
+print(names(dataCL))
+dataCL["country"] = data1["...1"]
+
+###Extracting Status
+dataStatus<-data1[ , grepl( "Status" , names( data1 ) ) ]  
+print(names(dataStatus))
+dataStatus["country"] = data1["...1"]
+
+## I'll rename columns & pivot per variable 
+new_cols = append(years, 'country')
+print(new_cols)
+
+names(dataPR) = new_cols
+dataPR_p<-pivot_longer(dataPR, !"country", names_to = "measure", values_to = "val")
+
+names(dataCL) = new_cols
+dataCL_p<-pivot_longer(dataCL, !"country", names_to = "measure", values_to = "val")
+
+names(dataStatus) = new_cols
+dataStatus_p<-pivot_longer(dataStatus, !"country", names_to = "measure", values_to = "val")
+
+data_final <-dataPR_p
+names(data_final)[2] = "year"
+names(data_final)[3] = "PR"
+data_final["CL"] = dataCL_p["val"]
+data_final["Status"] = dataStatus_p["val"]
+```
+
+
+```{r pressure 3, echo=FALSE}
+data_final
+```
+
+
+
+```{r, echo=FALSE}
+# 2nd Part
+## I'll convert new columns to numeric
+data_final$PR = sapply(data_final$PR,as.numeric)
+data_final$CL = sapply(data_final$CL,as.numeric)
+```
+```{r, echo=FALSE}
+#How many observations are there:
+print("Found observations:")
+print( nrow(data_final)*3)
+```
+
+
+```{r pressure 4, echo=FALSE}
+## Computing measures of central tendency and variability. 
+meanPR = mean(data_final$PR, na.rm=TRUE)
+cat("Mean PR=", meanPR,"\n")
+
+meanCL = mean(data_final$CL, na.rm=TRUE)
+cat("Mean CL=", meanCL,"\n")
+
+medianCL= median(data_final$CL, na.rm=TRUE)
+cat("Median CL=", medianCL,"\n")
+medianPR = median(data_final$PR, na.rm=TRUE)
+cat("Median PR=", medianPR,"\n")
+
+modePR = names(sort(-table(data_final$PR)))[1]
+cat("Mode PR=", modePR,"\n")
+modeCL =  names(sort(-table(data_final$CL)))[1]
+cat("Mode CL=", modeCL,"\n")
+
+varCL= var(data_final$CL, na.rm=TRUE)
+cat("Variance CL=", varCL,"\n")
+
+varPR = var(data_final$PR, na.rm=TRUE)
+cat("Variance PR=", varPR,"\n")
+
+```
+
+```{r pressure 5, echo=FALSE}
+
+## Plot the distribution of both the PR and CL variable using a boxplot and histogram. Make the same plot by year. Make sure to make your plots as professional as possible. Include a title and label the axes.
+### Histogram
+hist(data_final$PR)
+```
+
+```{r pressure, echo=FALSE}
+
+hist(data_final$CL)
+```
+
+```{r pressure 6, echo=FALSE}
+## BoxPlot
+boxplot(data_final$CL)
+```
+
+```{r pressure 7, echo=FALSE}
+boxplot(data_final$PR)
+```
+
+```{r pressure 8, echo=FALSE}
+## Normal plot for Peru
+data_peru = data_final[data_final$country=='Peru',]
+plot(data_peru$year, data_peru$PR)
+```
+
+```{r pressure 9, echo=FALSE}
+
+####DONE!!!!!!###############
+
+```
